@@ -1,3 +1,4 @@
+#pragma once
 #include <string_view>
 #include <vector>
 #include <memory>
@@ -23,11 +24,11 @@ public:
     /**
     * Blocking read call.
     * 
-    * @param minBytes the minimum bytes to read. Will wait until minBytes data is read
-    *   If minBytes is 0, will read however much data is first available
+    * @param bytes the amount of bytes to read. Will wait until bytes data is read
+    *   If bytes is 0, this will read however much data is first available
     * @returns non-empty buffer of read data
     */
-    virtual std::vector<char> read(size_t minBytes = 0) = 0;
+    virtual std::vector<char> read(size_t bytes = 0) = 0;
 
     /**
     * Non blocking read call.
@@ -49,4 +50,4 @@ public:
 
 // TODO
 // You may want to pass a URI string, or maybe some enums
-std::unique_ptr<Port> make_port();
+// std::unique_ptr<Port> make_port();

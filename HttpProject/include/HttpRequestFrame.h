@@ -1,3 +1,4 @@
+#pragma once
 #include "HttpFrame.h"
 /// The HTTP data frame sent to servers to request
 /// a resource

@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <string_view>
 /// Encapsulates the headers and information of an HTTP request or response frame
@@ -33,3 +34,27 @@ class HttpFrame {
     */
     const std::string& get(std::string_view header);
 };
+
+namespace HttpResponse {
+    constexpr const char* ok = "200 OK";
+    constexpr const char* created = "201 Created";
+    constexpr const char* bad = "400 Bad Request";
+    constexpr const char* forbidden = "403 Forbidden";
+    constexpr const char* unauth = "401 Unauthorized";
+    constexpr const char* not_found = "404 Not Found";
+    constexpr const char* not_allow = "405 Method Not Allowed";
+    constexpr const char* not_implement = "501 Not Implemented";
+    constexpr const char* switch_proto = "101 Switching Protocols";
+}
+
+namespace HttpRespNum {
+    constexpr const int ok = 200;
+    constexpr const int created = 201;
+    constexpr const int bad = 400;
+    constexpr const int forbidden = 403;
+    constexpr const int unauth = 401;
+    constexpr const int not_found = 404;
+    constexpr const int not_allow = 405;
+    constexpr const int not_implement = 501;
+    constexpr const int switch_proto = 101;
+}

@@ -1,3 +1,4 @@
+#pragma once
 #include "HttpFrame.h"
 /// The HTTP response frame sent from servers to clients
 /// to return information

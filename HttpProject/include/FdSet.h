@@ -1,10 +1,11 @@
+#pragma once
 #include <optional>
 #include <chrono>
 /// Set of file descriptors.
 /// When activity is detected on an FD that is part of the set
 /// a flag is set, which can be queried
 class FdSet {
-    struct fd_set fd;
+    struct fd_set set;
     // forward declaration
 public:
     /**
@@ -12,34 +13,34 @@ public:
     * 
     * Clears all set flags
     */
-    void reset();
+    void reset() {}
 
     /// @return true if there is activity on the specified socket/port/fd
-    bool is_set(int fd) const;
+    bool is_set(int fd) const { fd; return false; }
 
     /// Removes an fd from the set and clears its flags
-    void remove(int fd);
+    void remove(int fd) { fd; }
 
     /// Adds an fd to the set
     /// Begins listening for activity on that fd
-    void add(int fd);
-
-    using fd_opt_t = std::optional<const std::reference_wrapper<FdSet>>;
+    void add(int fd) { fd; }
 
     /**
     * Suspends program until there is activity on an fd set
     * @param ... sets the read and/or write and/or error set to wait for
+    *   Cannot have duplicate set types and at most 3 sets can be specified
     */
     template<class ... Sets>
-    static std::enable_if_t</*...*/> wait(Sets&& ... sets);
+    static std::enable_if_t<true/*TODO*/> wait(Sets&& ... sets);
 
     /**
     * Suspends program until there is activity on an fd set or
     * the timeout is reached
     * @param ... sets the read and/or write and/or error set to wait for
+    *   Cannot have duplicate set types and at most 3 sets can be specified
     */
     template<class ... Sets>
-    static std::enable_if_t</*...*/> wait(std::chrono::microseconds timeout, Sets&& ... sets);
+    static std::enable_if_t<true/*TODO*/> wait(std::chrono::microseconds timeout, Sets&& ... sets);
 };
 
 enum class SetType {

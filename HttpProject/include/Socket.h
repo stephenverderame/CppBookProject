@@ -1,3 +1,4 @@
+#pragma once
 #include "Port.h"
 
 /// A port to a Berkely socket

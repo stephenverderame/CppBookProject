@@ -3,29 +3,30 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-set(CMAKE_CXX_VERSION 17)
+set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 project ("HttpProject")
 
-macro(external_add filename pkname)
-	configure_file(${filename} "${CMAKE_SOURCE_DIR}/external/${pkname}-download/CMakeLists.txt")
-	execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+macro (external_add filename pkname)
+	configure_file (${filename} "${CMAKE_SOURCE_DIR}/external/${pkname}-download/CMakeLists.txt")
+	execute_process (COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
 		WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/external/${pkname}-download")
-	execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+	execute_process (COMMAND "${CMAKE_COMMAND}" --build .
 		WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/external/${pkname}-download")
-	set(${pkname}_SUBDIRS "${CMAKE_SOURCE_DIR}/external/${pkname}-src"
+	set (${pkname}_SUBDIRS "${CMAKE_SOURCE_DIR}/external/${pkname}-src"
 	"${CMAKE_SOURCE_DIR}/external/${pkname}-build")
-endmacro() 
+endmacro () 
 
 #Install googletest
-external_add(GTestCMakeLists.txt.in gtest)
+external_add (GTestCMakeLists.txt.in gtest)
 
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+set (gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-add_subdirectory(${gtest_SUBDIRS})
+add_subdirectory (${gtest_SUBDIRS})
 
 
-enable_testing()
+enable_testing ()
 include (CTest)
 
 add_subdirectory ("HttpProject")
