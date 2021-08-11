@@ -32,7 +32,8 @@ Address::Address(std::string_view addrStr, unsigned short port) : Address(port)
             throw lastError;
     }
     else {
-        const auto host = gethostbyname(addrTerm.c_str());
+        const auto host = gethostbyname(addrTerm.c_str()); 
+        //only supports Ipv4, see getaddrinfo() for ipv6 support
         if (host == NULL)
             throw lastError;
         addrData.sin_addr = *reinterpret_cast<in_addr*>(*host->h_addr_list);

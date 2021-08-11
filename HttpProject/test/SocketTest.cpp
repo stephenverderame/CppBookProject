@@ -1,3 +1,4 @@
+/// \file Tests the logic of remote port implementations
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <Port.h>
@@ -63,6 +64,7 @@ template<class Sock>
 class SocketTest : public testing::Test {
 protected:
     using fixture_sock_t = decltype(std::declval<Sock>().first);
+    static_assert(is_remote_port_v<fixture_sock_t>);
     using factory_t = decltype(std::declval<Sock>().second);
 
     std::unique_ptr<Port> client, server, serverConnection;

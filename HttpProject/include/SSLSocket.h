@@ -1,6 +1,6 @@
 #pragma once
 #include "Port.h"
-/// A socket to a secure socket
+/// A port to a secure socket
 /// Encrypted with TLS 1.2
 class SSLSocket : public Port {
     struct Impl;
@@ -8,7 +8,7 @@ class SSLSocket : public Port {
 
     /// Constructs an SSL socket by taking ownership of a socket
     /// and ssl class
-    SSLSocket(size_t sock, void* ssl, class Address&& addr);
+    SSLSocket(unsigned long long sock, void* ssl, class Address&& addr);
 public:
     /// Creates a client ssl socket connecting to the given address
     SSLSocket(const class Address& addr);

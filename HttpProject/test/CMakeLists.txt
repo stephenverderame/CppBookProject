@@ -28,7 +28,7 @@ function (make_test NAME)
 
 	add_executable (${NAME} ${MK_TEST_SOURCES})
 
-	add_dependencies (${NAME} gtest gmock)
+	add_dependencies (${NAME} gtest gmock) # Ensure this target is compiled after gtest and gmock
 	link_target (${NAME})
 	target_link_libraries (${NAME} PRIVATE GTest::gtest_main PRIVATE GTest::gmock)
 	add_test (NAME ${NAME} COMMAND ${NAME} WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/HttpProject/test")
@@ -36,8 +36,18 @@ function (make_test NAME)
 endfunction()
 
 set (SOURCE_DIR ${PROJECT_SOURCE_DIR}/HttpProject/src)
+set (TEST_SOURCES "${SOURCE_DIR}/Networking.cpp" 
+	"${SOURCE_DIR}/SSLSocket.cpp" "${SOURCE_DIR}/Address.cpp")
 
 make_test (SocketTest SOURCES "SocketTest.cpp" "${SOURCE_DIR}/Networking.cpp" 
 	"${SOURCE_DIR}/SSLSocket.cpp" "${SOURCE_DIR}/Address.cpp")
 
+make_test (ChunkedEncodingTest SOURCES "ChunkedTest.cpp" "${SOURCE_DIR}/Networking.cpp" 
+	"${SOURCE_DIR}/SSLSocket.cpp" "${SOURCE_DIR}/Address.cpp")
+
+make_test (QueryTest SOURCES "QueryTest.cpp" "${SOURCE_DIR}/Networking.cpp" 
+	"${SOURCE_DIR}/SSLSocket.cpp" "${SOURCE_DIR}/Address.cpp")
+
 cp_dir ("${CMAKE_CURRENT_SOURCE_DIR}/data" "${CMAKE_CURRENT_BINARY_DIR}/data")
+# MSVC doesn't seem to support the WORKING_DIRECTORY flag on add_test
+# so this copies any test data to the build directory

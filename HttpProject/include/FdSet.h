@@ -1,12 +1,12 @@
 #pragma once
 #include <optional>
 #include <chrono>
+#include "Networking.h"
 /// Set of file descriptors.
 /// When activity is detected on an FD that is part of the set
 /// a flag is set, which can be queried
 class FdSet {
-    struct fd_set set;
-    // forward declaration
+    fd_set set;
 public:
     /**
     * Removes all FDs from the set.
@@ -16,14 +16,14 @@ public:
     void reset() {}
 
     /// @return true if there is activity on the specified socket/port/fd
-    bool is_set(int fd) const { fd; return false; }
+    bool is_set(unsigned long long fd) const { fd; return false; }
 
     /// Removes an fd from the set and clears its flags
-    void remove(int fd) { fd; }
+    void remove(unsigned long long fd) { fd; }
 
     /// Adds an fd to the set
     /// Begins listening for activity on that fd
-    void add(int fd) { fd; }
+    void add(unsigned long long fd) { fd; }
 
     /**
     * Suspends program until there is activity on an fd set

@@ -110,6 +110,14 @@ SSLSocket::~SSLSocket() {
             SSL_free(pimpl->ssl);
         if (pimpl->ctx != nullptr)
             SSL_CTX_free(pimpl->ctx);
+        if (pimpl->sock != SOCKET_ERROR) {
+#ifdef WIN32
+            closesocket(pimpl->sock);
+#else
+            close(pimpl->sock);
+#endif
+        }
+
     }
 };
 
@@ -201,20 +209,21 @@ SSLSocket SSLSocket::accept() const {
     
 }
 
-SSLSocket::SSLSocket(size_t sock, void* ssl, Address&& addr) :
-    pimpl(std::make_unique<Impl>(reinterpret_cast<SSL*>(ssl), nullptr, sock, std::move(addr))) {}
+SSLSocket::SSLSocket(unsigned long long sock, void* ssl, Address&& addr) :
+    pimpl(std::make_unique<Impl>(reinterpret_cast<SSL*>(ssl), nullptr, 
+        static_cast<socket_t>(sock), std::move(addr))) {}
 
 SSLSocket::SSLSocket(SSLSocket&&) noexcept = default;
 SSLSocket& SSLSocket::operator=(SSLSocket&&) noexcept = default;
 
 void SSLSocket::add_to_fd(FdSet& fd) const {
-    return fd.add(static_cast<int>(pimpl->sock));
+    return fd.add(pimpl->sock);
 }
 
 bool SSLSocket::is_in_fd(const FdSet& fd) const {
-    return fd.is_set(static_cast<int>(pimpl->sock));
+    return fd.is_set(pimpl->sock);
 }
 
 void SSLSocket::remove_from_fd(FdSet& fd) const {
-    fd.remove(static_cast<int>(pimpl->sock));
+    fd.remove(pimpl->sock);
 }

@@ -3,6 +3,7 @@
 #include <string_view>
 /// Encapsulates the headers and information of an HTTP request or response frame
 class HttpFrame {
+public:
     enum class Protocol {
         GET, POST
     } protocol;
@@ -10,7 +11,7 @@ class HttpFrame {
     virtual ~HttpFrame() = default;
 
     /**
-    * Composes the frame into a well-formatted HTTP frame
+    * Composes the data into a well-formatted HTTP frame to be sent
     *
     * @throws <something> if the request is malformed
     * @return string of HTTP request frame
@@ -33,6 +34,9 @@ class HttpFrame {
     * @throws ... if the header isn't found
     */
     const std::string& get(std::string_view header);
+
+    /// @return a `(major, minor)` pair indicating the HTTP major and minor version
+    std::pair<int, int> http_version() const noexcept;
 };
 
 namespace HttpResponse {

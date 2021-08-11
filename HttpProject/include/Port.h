@@ -51,3 +51,25 @@ public:
 // TODO
 // You may want to pass a URI string, or maybe some enums
 // std::unique_ptr<Port> make_port();
+
+/**
+* Determines if the given type adheres to the remote port concept, which is a port to a remote
+* peer such as a socket. If the type adheres, the constexpr member `value` is `true`,
+* otherwise it is `false`.
+* @{
+*/
+template<class T, typename = void>
+struct RemotePortConcept : public std::false_type {};
+
+template<class T>
+struct RemotePortConcept<T, std::void_t<
+    std::enable_if_t<std::is_base_of_v<Port, T>>,
+    decltype(std::declval<const T>().accept())
+    >> : public std::true_type {};
+/// @}
+
+/// True if the specified type is a remote port
+/// @see RemotePortConcept
+template<class T>
+constexpr auto is_remote_port_v = 
+    RemotePortConcept<std::remove_cv_t<std::remove_reference_t<T>>>::value;
