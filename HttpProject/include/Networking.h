@@ -15,6 +15,7 @@ using socket_t = SOCKET;
 #include <netdb.h>
 #include <netinet/tcp.h>
 #include <errno.h>
+#include <unistd.h>
 using socket_t = int;
 #define lastError errno
 #define INVALID_SOCKET -1

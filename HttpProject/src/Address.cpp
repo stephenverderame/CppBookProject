@@ -10,7 +10,7 @@ Address::Address(unsigned short port)
 {
     addrData.sin_family = AF_INET; //ipv4
     addrData.sin_port = htons(port);
-    addrData.sin_addr.S_un.S_addr = INADDR_ANY;
+    addrData.sin_addr.s_addr = INADDR_ANY;
 }
 
 /// @return true if the address in an ipv4 address
@@ -41,7 +41,7 @@ Address::Address(std::string_view addrStr, unsigned short port) : Address(port)
 }
 
 bool Address::is_server() const noexcept {
-    return addrData.sin_addr.S_un.S_addr == INADDR_ANY;
+    return addrData.sin_addr.s_addr == INADDR_ANY;
 }
 
 int Address::family() const noexcept {

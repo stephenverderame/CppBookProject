@@ -4,7 +4,9 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/bio.h>
+#ifdef WIN32
 #include <openssl/applink.c>
+#endif
 #include "Address.h"
 #include "Networking.h"
 #include "FdSet.h"
@@ -45,7 +47,7 @@ std::tuple<SSL*, SSL_CTX*> connect_client(const Address& addr, socket_t s) {
     const auto [sockAddr, size] = addr.addr();
     if (connect(s, sockAddr, size))
         throw std::runtime_error(format("Connect client failed: ", lastError));
-    const auto method = TLSv1_2_client_method();
+    const auto method = TLS_client_method();
 
     auto ctx = SSL_CTX_new(method);
     if (ctx == NULL)
@@ -64,19 +66,19 @@ std::tuple<SSL*, SSL_CTX*> connect_client(const Address& addr, socket_t s) {
 
 }
 
-std::tuple<SSL*, SSL_CTX*> setup_server(const char * certFile, const char* keyFile) 
+std::tuple<SSL*, SSL_CTX*> setup_server(const char* certFile, const char* keyFile)
 {
-    const SSL_METHOD* meth = TLSv1_2_server_method();
+    const SSL_METHOD* meth = TLS_server_method();
     auto ctx = SSL_CTX_new(meth);
     SSL_CTX_set_ecdh_auto(ctx, 1);
 
     if (SSL_CTX_use_certificate_file(ctx, certFile, SSL_FILETYPE_PEM) <= 0) {
         ERR_print_errors_fp(stderr);
-        throw ERR_get_error();
+        throw std::runtime_error(format("Could not load cert file: ", ERR_get_error()));
     }
     if (SSL_CTX_use_PrivateKey_file(ctx, keyFile, SSL_FILETYPE_PEM) <= 0) {
         ERR_print_errors_fp(stderr);
-        throw ERR_get_error();
+        throw std::runtime_error(format("Could not load key file: ", ERR_get_error()));
     }
 
     const auto ssl = SSL_new(ctx);
@@ -84,15 +86,15 @@ std::tuple<SSL*, SSL_CTX*> setup_server(const char * certFile, const char* keyFi
 }
 
 SSLSocket::SSLSocket(const Address& addr) {
-    auto s = socket(addr.family(), SOCK_STREAM, NULL);
+    auto s = socket(addr.family(), SOCK_STREAM, 0);
     if (s == INVALID_SOCKET)
         throw std::runtime_error(format("Failed to create client sock: ", lastError));
     auto [ssl, ctx] = connect_client(addr, s);
     pimpl = std::make_unique<Impl>(ssl, ctx, s, addr);
 };
 
-SSLSocket::SSLSocket(const Address& addr, const char * certFile, const char * keyFile) {
-    auto s = socket(addr.family(), SOCK_STREAM, NULL);
+SSLSocket::SSLSocket(const Address& addr, const char* certFile, const char* keyFile) {
+    auto s = socket(addr.family(), SOCK_STREAM, 0);
     if (s == INVALID_SOCKET)
         throw std::runtime_error(format("Failed to create server sock: ", lastError));
     auto [ssl, ctx] = setup_server(certFile, keyFile);
@@ -124,7 +126,7 @@ SSLSocket::~SSLSocket() {
 void SSLSocket::write(std::string_view data) {
     auto sent = decltype(data.size()){0};
     while (sent < data.size()) {
-        auto ret = SSL_write(pimpl->ssl, data.data() + sent, 
+        auto ret = SSL_write(pimpl->ssl, data.data() + sent,
             static_cast<int>(data.size() - sent));
         if (ret <= 0) {
             throw std::runtime_error(
@@ -142,7 +144,7 @@ std::vector<char> SSLSocket::read(size_t minBytes) {
     do {
         if (read >= buf.size() - 1024)
             buf.resize(buf.size() * 2);
-        auto ret = SSL_read(pimpl->ssl, &buf[read], 
+        auto ret = SSL_read(pimpl->ssl, &buf[read],
             static_cast<int>(std::min(buf.size() - read, minBytes - read)));
         if (ret <= 0)
             throw std::runtime_error(
@@ -161,7 +163,7 @@ std::vector<char> SSLSocket::try_read() {
     do {
         if (read >= buf.size() - 1024)
             buf.resize(buf.size() * 2);
-        auto ret = SSL_read(pimpl->ssl, &buf[read], 
+        auto ret = SSL_read(pimpl->ssl, &buf[read],
             static_cast<int>(buf.size() - read));
         if (ret <= 0) {
             const auto errCode = SSL_get_error(pimpl->ssl, ret);
@@ -184,7 +186,7 @@ size_t SSLSocket::available() const noexcept {
 
 SSLSocket SSLSocket::accept() const {
     if (!pimpl->addr.is_server())
-        throw std::string("Can only accept on a server socket");
+        throw std::runtime_error("Can only accept on a server socket");
     auto connectionAddr = pimpl->addr;
     auto [addr, sz] = connectionAddr.addr_mut();
     const auto connection = ::accept(pimpl->sock, addr, &sz);
@@ -195,35 +197,37 @@ SSLSocket SSLSocket::accept() const {
     auto connectionSsl = SSL_new(pimpl->ctx);
     if (connectionSsl == NULL) {
         ERR_print_errors_fp(stderr);
-        throw ERR_get_error();
+        throw std::runtime_error(format("Cannot make ssl connection: ",
+            ERR_get_error()));
     }
     if (SSL_set_fd(connectionSsl, static_cast<int>(connection)) == 0)
-        throw SSL_get_error(connectionSsl, 0);
+        throw std::runtime_error(format("Cannot set SSL fd: ",
+            SSL_get_error(connectionSsl, 0)));
     const auto ret = SSL_accept(connectionSsl);
     if (ret <= 0) {
         throw std::runtime_error(
-            format("Failed to accept ssl connection: ", 
+            format("Failed to accept ssl connection: ",
                 SSL_get_error(connectionSsl, ret)));
     }
     return SSLSocket(connection, connectionSsl, std::move(connectionAddr));
-    
+
 }
 
 SSLSocket::SSLSocket(unsigned long long sock, void* ssl, Address&& addr) :
-    pimpl(std::make_unique<Impl>(reinterpret_cast<SSL*>(ssl), nullptr, 
+    pimpl(std::make_unique<Impl>(reinterpret_cast<SSL*>(ssl), nullptr,
         static_cast<socket_t>(sock), std::move(addr))) {}
 
 SSLSocket::SSLSocket(SSLSocket&&) noexcept = default;
 SSLSocket& SSLSocket::operator=(SSLSocket&&) noexcept = default;
 
-void SSLSocket::add_to_fd(FdSet& fd) const {
+void SSLSocket::add_to_fd(FdSet & fd) const {
     return fd.add(pimpl->sock);
 }
 
-bool SSLSocket::is_in_fd(const FdSet& fd) const {
+bool SSLSocket::is_in_fd(const FdSet & fd) const {
     return fd.is_set(pimpl->sock);
 }
 
-void SSLSocket::remove_from_fd(FdSet& fd) const {
+void SSLSocket::remove_from_fd(FdSet & fd) const {
     fd.remove(pimpl->sock);
 }

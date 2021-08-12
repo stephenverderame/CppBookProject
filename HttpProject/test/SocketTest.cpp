@@ -21,7 +21,7 @@ std::vector<char> randomBuffer(int minSize, int maxSize) {
     std::vector<char> buf;
     std::generate_n(std::back_inserter(buf), sz, []() {
         return static_cast<char>(randomElemGen(randomEng));
-    });
+        });
     return buf;
 }
 #ifdef WIN32
@@ -54,7 +54,7 @@ struct SSLSockFactory {
 
 /**
 * Test fixture for testing socket types.
-* 
+*
 * @param <Sock> a pair of a socket type and its corresponding test factory
 *   The test factory must define `static makeServer(port)` and
 *   `static makeClient(addr, port)` functions which return instances of
@@ -78,7 +78,7 @@ public:
         auto fut = std::async(std::launch::async, [&serverSocket]() {
             return std::make_unique<fixture_sock_t>(serverSocket->accept());
             // new thread to accept the client since accept is blocking and so is connect
-        });
+            });
         client = std::make_unique<fixture_sock_t>(factory_t::makeClient("127.0.0.1", port++));
         serverConnection = fut.get(); // waits for accept to be done, then gets result
         server = std::unique_ptr<Port>(std::move(serverSocket));
@@ -87,12 +87,12 @@ protected:
     /**
     * Runs the specified test functions in both directions repeadetly with
     * different inputs
-    * 
+    *
     * @param testDirection function which takes a message payload, sender, and receiver
     *   The sender sends the payload and must assert the receiver receives it correctly
     */
-    void testRepititions(std::function<void(std::vector<char>&, 
-        std::unique_ptr<Port>&, std::unique_ptr<Port>&)> testDirection) 
+    void testRepititions(std::function<void(std::vector<char>&,
+        std::unique_ptr<Port>&, std::unique_ptr<Port>&)> testDirection)
     {
         for (auto cnt = 0; cnt < testCount * 0.8; ++cnt) {
             auto data = randomBuffer(1, 5000);
@@ -113,14 +113,16 @@ TYPED_TEST_SUITE(SocketTest, SocketTestTypes);
 TYPED_TEST(SocketTest, readAndWrite) {
     for (auto cnt = 0; cnt < testCount; ++cnt) {
         auto data = randomBuffer(1, 5000);
-        client->write({ data.data(), data.size() });
-        ASSERT_THAT(serverConnection->read(data.size()), testing::ContainerEq(data));
+        this->client->write({ data.data(), data.size() });
+        // because of how Gtest is implemented
+        // we need the this pointer for typed test fixtures
+        ASSERT_THAT(this->serverConnection->read(data.size()), testing::ContainerEq(data));
 
-        std::shuffle(data.begin(), data.end(), 
+        std::shuffle(data.begin(), data.end(),
             std::default_random_engine(std::random_device{}()));
 
-        serverConnection->write({ data.data(), data.size() });
-        ASSERT_THAT(client->read(data.size()), testing::ContainerEq(data));
+        this->serverConnection->write({ data.data(), data.size() });
+        ASSERT_THAT(this->client->read(data.size()), testing::ContainerEq(data));
     }
 }
 
@@ -128,7 +130,7 @@ TYPED_TEST(SocketTest, nonBlockReadWrite) {
     const auto testDirection = [](auto& data, auto& sender, auto& receiver) {
         static_cast<void>(std::async(std::launch::async, [&]() {
             sender->write({ data.data(), data.size() });
-        }));
+            }));
 
         std::vector<char> recvBuffer;
         do {
@@ -139,7 +141,7 @@ TYPED_TEST(SocketTest, nonBlockReadWrite) {
         ASSERT_THAT(recvBuffer, testing::ContainerEq(data));
     };
 
-    testRepititions(testDirection);
+    this->testRepititions(testDirection);
 
 
 }
@@ -152,11 +154,11 @@ TYPED_TEST(SocketTest, interleavedRW) {
         sender->write({ data.data() + midWay, data.size() - midWay });
         const auto rest = receiver->read(data.size() - midWay);
         recvBuffer.insert(recvBuffer.end(), rest.begin(), rest.end());
-        
+
         ASSERT_THAT(recvBuffer, testing::ContainerEq(data));
     };
 
-    testRepititions(testDirection);
+    this->testRepititions(testDirection);
 }
 
 TYPED_TEST(SocketTest, chunkedRW) {
@@ -165,11 +167,11 @@ TYPED_TEST(SocketTest, chunkedRW) {
         static_cast<void>(std::async(std::launch::async, [&]() {
             sender->write({ data.data(), midWay });
             sender->write({ data.data() + midWay, data.size() - midWay });
-        }));
+            }));
         const auto readData = receiver->read(data.size());
 
         ASSERT_THAT(readData, testing::ContainerEq(data));
     };
 
-    testRepititions(testDirection);
+    this->testRepititions(testDirection);
 }

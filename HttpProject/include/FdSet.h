@@ -16,14 +16,17 @@ public:
     void reset() {}
 
     /// @return true if there is activity on the specified socket/port/fd
-    bool is_set(unsigned long long fd) const { fd; return false; }
+    /// @param fd the socket or port integral file descriptor
+    bool is_set(unsigned long long) const { return false; }
 
     /// Removes an fd from the set and clears its flags
-    void remove(unsigned long long fd) { fd; }
+    /// @param fd the socket or port integral file descriptor
+    void remove(unsigned long long) {  }
 
     /// Adds an fd to the set
     /// Begins listening for activity on that fd
-    void add(unsigned long long fd) { fd; }
+    /// @param fd the socket or port integral file descriptor
+    void add(unsigned long long) {  }
 
     /**
     * Suspends program until there is activity on an fd set
@@ -43,6 +46,7 @@ public:
     static std::enable_if_t<true/*TODO*/> wait(std::chrono::microseconds timeout, Sets&& ... sets);
 };
 
+/// The type of interaction an Fd Set will wait for
 enum class SetType {
     Read, Write, Error
 };
