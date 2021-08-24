@@ -2,3 +2,4 @@ external
 out
 .vs
 docs
+analysis-cppcheck-build-dir

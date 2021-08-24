@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="1">
+    <builddir>analysis-cppcheck-build-dir</builddir>
+    <platform>Native</platform>
+    <analyze-all-vs-configs>false</analyze-all-vs-configs>
+    <check-headers>true</check-headers>
+    <check-unused-templates>true</check-unused-templates>
+    <max-ctu-depth>2</max-ctu-depth>
+    <max-template-recursion>100</max-template-recursion>
+    <includedir>
+        <dir name="HttpProject/include/"/>
+    </includedir>
+    <paths>
+        <dir name="HttpProject/src"/>
+        <dir name="HttpProject/test"/>
+    </paths>
+    <libraries>
+        <library>googletest</library>
+        <library>openssl</library>
+    </libraries>
+</project>

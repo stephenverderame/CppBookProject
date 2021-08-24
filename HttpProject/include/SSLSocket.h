@@ -11,7 +11,7 @@ class SSLSocket : public Port {
     SSLSocket(unsigned long long sock, void* ssl, class Address&& addr);
 public:
     /// Creates a client ssl socket connecting to the given address
-    SSLSocket(const class Address& addr);
+    explicit SSLSocket(const class Address& addr);
 
     /// Creates a server ssl socket on the given address
     /// @param certificateFile .pem certificate file
@@ -21,19 +21,19 @@ public:
 
     ~SSLSocket();
 
-    size_t available() const noexcept;
+    size_t available() const noexcept override;
 
-    void write(std::string_view data);
+    void write(std::string_view data) override;
 
-    std::vector<char> read(size_t minBytes = 0);
+    std::vector<char> read(size_t minBytes) override;
 
-    std::vector<char> try_read();
+    std::vector<char> try_read() override;
 
-    void add_to_fd(class FdSet& fd) const;
+    void add_to_fd(class FdSet& fd) const override;
 
-    bool is_in_fd(const class FdSet& fd) const;
+    bool is_in_fd(const class FdSet& fd) const override;
 
-    void remove_from_fd(class FdSet& fd) const;
+    void remove_from_fd(class FdSet& fd) const override;
 
     SSLSocket(const SSLSocket&) = delete;
     SSLSocket& operator=(const SSLSocket&) = delete;
